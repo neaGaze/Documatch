@@ -11,6 +11,26 @@ tokenized_data = []
 stemmed_data = []
 count_datafiles = 0
 
+# return the cosine similairty between a query string and a document
+def querydocsim(qstring,filename):
+    return False
+
+# return the cosine similarity betwen two speeches (files)
+def docdocsim(filename1,filename2):
+    return False
+
+# return the inverse document frequency of a token. If the token doesn't exist in the corpus, return 0
+def getidf(token):
+    return False
+
+# return the total number of occurrences of a token in all documents
+def getcount(token):
+    return False
+
+# return the document that has the highest similarity score with respect to 'qstring'
+def query(qstring):
+    return False
+
 def cosine_similarity(v1,v2):
     "compute cosine similarity of v1 to v2: (v1 dot v2)/{||v1||*||v2||)"
     sumxx, sumxy, sumyy = 0, 0, 0
