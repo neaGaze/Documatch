@@ -21,7 +21,10 @@ def docdocsim(filename1,filename2):
 
 # return the inverse document frequency of a token. If the token doesn't exist in the corpus, return 0
 def getidf(token):
-    return False
+    if token not in words_not_common[token]:
+        return 0
+    else:
+        return 1
 
 # return the total number of occurrences of a token in all documents
 def getcount(token):
@@ -75,7 +78,8 @@ for filename in os.listdir(corpus_root):
 count = 0
 for entry in raw_data:
    # tokenizer = RegexpTokenizer(r'[^a-zA-Z]')
-    if count != 11 and count != 13 and count != 14 and count < 15:
+    if count <= 10: #count != 11 and count != 13 and count != 14 and count < 15:
+        print "searching document #",count+1," ......."
         tokenized_data.append(word_separator(entry))
         count_datafiles += 1
     count += 1
@@ -86,7 +90,7 @@ for innerList in tokenized_data:
     tmp_list = []
     for each in innerList:
         if len(each) > 0:
-            print each
+            # print each
             tmp_list.append(stemmer.stem(each))
     stemmed_data.append(tmp_list)
 
@@ -96,6 +100,7 @@ words_not_common = []
 tfidf_vec_list = []
 for a in stemmed_data:
     words_not_common.append([each for each in a if each not in stepword])
+    print words_not_common
     #tfidf_vec_list.append(calculate_tdidf(words_not_common[a]))  
 
 # calculate the tdidf vector
