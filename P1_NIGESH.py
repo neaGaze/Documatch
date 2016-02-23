@@ -106,19 +106,15 @@ def calc_tf_idf():
     for key in tokens_in_all_doc:
         print "Running key ", key, "..."
         tfidf[key] = {}
-        minimum, maximum = 5000, -5000
+        weighted_avg_mean = 0
+
         for token in tokens_in_all_doc[key]:
             if token not in tfidf[key]:
-                tfidf[key][token] = (1.0 + float(math.log10(float(tokens_in_all_doc[key].count(token))))) * getidf(token)
-
-                if tfidf[key][token] < minimum:
-                    minimum = tfidf[key][token]
-
-                if tfidf[key][token] > maximum:
-                    maximum = tfidf[key][token]
+                tfidf[key][token] = (1.0 + float(math.log10(float(tokens_in_all_doc[key].count(token)))))
+                weighted_avg_mean += tfidf[key][token] * tfidf[key][token]
 
         for tmp_key in tfidf[key]:
-            tfidf[key][tmp_key] = (tfidf[key][tmp_key] - minimum) / (maximum - minimum)
+            tfidf[key][tmp_key] = ((tfidf[key][tmp_key]) * getidf(token)) / weighted_avg_mean**(1/2)
 
     return tfidf
 
