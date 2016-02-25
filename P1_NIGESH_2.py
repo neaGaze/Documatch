@@ -20,14 +20,18 @@ def querydocsim(qstring,filename):
     return False
 
 # return the cosine similarity betwen two speeches (files)
-def docdocsim(filename1,filename2):
+def docdocsim(tfidf, filename1,filename2):
     doc1 = tfidf[filename1]
     doc2 = tfidf[filename2]
     cosine_sim = []
 
     for key in doc1:
-        cosine_sim += [doc2[each]*doc1[key] for each in doc2 if key in doc2]
+        for each in doc2:
+            if key == each:
+                cosine_sim.append(doc1[key] * doc2[each])
+        # cosine_sim += [doc2[each]*doc1[key] for each in doc2 if key in doc2]
 
+    print('cosine list: ', len(cosine_sim))
     cosine_sum = sum(cosine_sim)
     return cosine_sum
 
@@ -70,11 +74,11 @@ def calc_tf_idf(corpus_token_repo):
         for token in tokens_in_all_doc[doc]:
             if token not in tfidf[doc]:
                 count = tokens_in_all_doc[doc].count(token)
-                tfidf[doc][token] = (1.0 + float(math.log10(float(count)))) if count != 0 else 0
+                tfidf[doc][token] = ((1.0 + float(math.log10(float(count)))) if count != 0 else 0) * getidf(token)
                 weighted_avg_mean += (tfidf[doc][token] * tfidf[doc][token])
 
         for tmp_key in tfidf[doc]:
-            tfidf[doc][tmp_key] = ((tfidf[doc][tmp_key]) * getidf(token)) / weighted_avg_mean**(1/2)
+            tfidf[doc][tmp_key] = ((tfidf[doc][tmp_key])) / weighted_avg_mean**(1/2)
 
     return tfidf
 
@@ -93,7 +97,7 @@ def token_processor(doc):
     return tokens
 
 def read_file_tokenize():
-    corpus_root = './test_cases' # './presidential_debates'
+    corpus_root = './presidential_debates' # './test_cases' 
     global TOTAL_DOCUMENTS_SCANNED
     corpus_token_repo = []
 
@@ -108,7 +112,7 @@ def read_file_tokenize():
         TOTAL_DOCUMENTS_SCANNED += 1
         
         # get all the corpus of tokens
-        corpus_token_repo += [each for each in tokens_in_all_doc[filename] if each not in corpus_token_repo] 
+        # corpus_token_repo += [each for each in tokens_in_all_doc[filename] if each not in corpus_token_repo] 
 
     return corpus_token_repo
 
@@ -121,7 +125,7 @@ def write_output_file(var):
 ''' Read saved data from disk '''
 def read_saved_data(filename):
     str_data = ''
-    with open(filename) as da:
+    with open(os.path.join('./gen', filename)) as da:
         str_data += da.read()
 
     return ast.literal_eval(str_data)
