@@ -63,7 +63,7 @@ def cosine_similarity(v1,v2):
 
 def calc_tf_idf(corpus_token_repo):
     for doc in tokens_in_all_doc:
-        print "Running doc ", doc, "..."
+        print("Running doc ", doc, "...")
         tfidf[doc] = {}
         weighted_avg_mean = 0
 
@@ -71,7 +71,7 @@ def calc_tf_idf(corpus_token_repo):
             if token not in tfidf[doc]:
                 count = tokens_in_all_doc[doc].count(token)
                 tfidf[doc][token] = (1.0 + float(math.log10(float(count)))) if count != 0 else 0
-                weighted_avg_mean += tfidf[doc][token] * tfidf[doc][token]
+                weighted_avg_mean += (tfidf[doc][token] * tfidf[doc][token])
 
         for tmp_key in tfidf[doc]:
             tfidf[doc][tmp_key] = ((tfidf[doc][tmp_key]) * getidf(token)) / weighted_avg_mean**(1/2)
@@ -93,7 +93,7 @@ def token_processor(doc):
     return tokens
 
 def read_file_tokenize():
-    corpus_root = './presidential_debates'
+    corpus_root = './test_cases' # './presidential_debates'
     global TOTAL_DOCUMENTS_SCANNED
     corpus_token_repo = []
 
@@ -114,7 +114,8 @@ def read_file_tokenize():
 
 ''' write the data to the disk '''
 def write_output_file(var):
-    with open('data.txt','w') as data:
+    file_name = input('Enter the file name to save as:')
+    with open(os.path.join('./gen', file_name),'w') as data:
         data.write('{0}'.format(var))
 
 ''' Read saved data from disk '''
@@ -127,5 +128,4 @@ def read_saved_data(filename):
 
 tbl = read_file_tokenize()
 #temp_list = [compute_tf_idf(each) for each in tokens_in_all_doc['2012-10-22.txt'][0:25]]
-
 
