@@ -15,10 +15,9 @@ TOTAL_DOCUMENTS_SCANNED = 0
 
 list_val = []
 
-# return the cosine similairty between a query string and a document
-def querydocsim(tfidf, qstring,filename):
+''' Return the normalized term frequency of the query '''
+def get_query_tf(qstring):
     processed_token = token_processor(qstring.lower())
-    doc = tfidf[filename]
     tf_qstring = {}
     weighted_avg_mean = 0
     
@@ -28,10 +27,19 @@ def querydocsim(tfidf, qstring,filename):
             tf_qstring[token] = ((1.0 + float(math.log10(float(count)))) if count != 0 else 0)
             weighted_avg_mean += tf_qstring[token]**(2)
 
+    for tmp_key in tf_qstring:
+        tf_qstring[tmp_key] = ((tf_qstring[tmp_key])) / weighted_avg_mean**(1/2)
+
+    return tf_qstring
+
+# return the cosine similairty between a query string and a document
+def querydocsim(tfidf, qstring, filename):
+    doc = tfidf[filename]
+    tf_qstring = get_query_tf(qstring)
+
     cosine_simil = 0
     
     for tmp_key in tf_qstring:
-        tf_qstring[tmp_key] = ((tf_qstring[tmp_key])) / weighted_avg_mean**(1/2)
         for tmp_key2 in doc:
             if tmp_key == tmp_key2:
                 cosine_simil += tf_qstring[tmp_key] * doc[tmp_key2]
@@ -67,9 +75,17 @@ def getcount(token):
     return count
 
 # return the document that has the highest similarity score with respect to 'qstring'
-def query(qstring):
-    processed_token = token_processor(qstring.lower())
-    return False
+def query(tfidf, qstring):
+    tf_qstring = get_query_tf(qstring)
+    greatest_val = 0.0
+    matching_doc = ''
+    
+    for key in tfidf:
+        sim = querydocsim(tfidf, qstring, key) 
+        if sim > greatest_val:
+            greatest_val = sim 
+            matching_doc = key
+    return matching_doc
 
 def calc_tf_idf(corpus_token_repo):
     for doc in tokens_in_all_doc:
