@@ -4,6 +4,8 @@ import sys
 import math
 import re
 import nltk
+import time
+from functools import reduce
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem.porter import PorterStemmer
@@ -19,8 +21,7 @@ from nltk.stem.porter import PorterStemmer
 tokens_in_all_doc = {}
 tfidf = {}
 TOTAL_DOCUMENTS_SCANNED = 0
-
-list_val = []
+global_idf = {}
 
 ''' Return the normalized term frequency of the query '''
 def get_query_tf(qstring):
@@ -48,11 +49,16 @@ def querydocsim(qstring, filename):
     tf_qstring = get_query_tf(qstring)
 
     cosine_simil = 0
-    
+    ''' 
     for tmp_key in tf_qstring:
         for tmp_key2 in doc:
             if tmp_key == tmp_key2:
                 cosine_simil += tf_qstring[tmp_key] * doc[tmp_key2]
+    '''
+
+    for key in list(set(tf_qstring).intersection(set(doc))):
+        cosine_simil += tf_qstring[key] * doc[key]
+    #print(cosine_simil)
 
     return cosine_simil
 
@@ -69,20 +75,30 @@ def docdocsim(filename1, filename2):
     doc2 = tfidf[filename2]
     cosine_sum = 0
 
+    '''
     for key in doc1:
         for each in doc2:
             if key == each:
                 cosine_sum += doc1[key] * doc2[each]
+    '''
+    for key in list(set(doc1).intersection(set(doc2))):
+        cosine_sum += doc1[key] * doc2[key]
 
     return cosine_sum
 
 ''' return the inverse document frequency of a token. If the token doesn't exist in the corpus, return 0 ### '''
 def getidf(token):
+    global global_idf 
+    if token in global_idf:
+        return global_idf[token]
+    
     total_docs = 0
     for key in tokens_in_all_doc:
         if token in tokens_in_all_doc[key]:
             total_docs += 1
-    return math.log10((float(TOTAL_DOCUMENTS_SCANNED) / float(total_docs)))
+    global_idf[token] = math.log10((float(TOTAL_DOCUMENTS_SCANNED) / float(total_docs))) 
+
+    return global_idf[token]
 
 '''  return the total number of occurrences of a token in all documents #### '''
 def getcount(token):
@@ -93,22 +109,23 @@ def getcount(token):
 
 ''' return the document that has the highest similarity score with respect to 'qstring' #### '''
 def query(qstring):
+    s_time = time.time() 
     find_all_tf_idf()
     tf_qstring = get_query_tf(qstring)
     greatest_val = 0.0
     matching_doc = ''
-    
     for key in tfidf:
         sim = querydocsim(qstring, key) 
         if sim > greatest_val:
             greatest_val = sim 
             matching_doc = key
+    print("\n TOTAL QUERY TIME: ", (time.time() - s_time), " secs")
     return matching_doc
 
 ''' find the tf-idf of single document '''
 def get_tf_idf(doc):
     print("Running ", doc, "...")
-    
+    start_time = time.time() 
     if doc in tfidf:
         return tfidf[doc] 
     else:
@@ -127,6 +144,8 @@ def get_tf_idf(doc):
     
     tfidf[doc].update((x, y / weighted_avg_mean**(1/2)) for x,y in tfidf[doc].items())
 
+    end_time = time.time()
+    print("time taken: ", (end_time - start_time), " secs")
     return tfidf[doc]
 
 ''' find the tfidf vector of all the documents '''
@@ -154,6 +173,7 @@ def read_file_tokenize():
     corpus_root = './presidential_debates' 
     global TOTAL_DOCUMENTS_SCANNED
 
+    start_time = time.time()
     for filename in os.listdir(corpus_root):
         file = open(os.path.join(corpus_root, filename), "r")
         doc = file.read()
@@ -163,7 +183,9 @@ def read_file_tokenize():
         # now get the tokens
         tokens_in_all_doc[filename] = token_processor(doc)
         TOTAL_DOCUMENTS_SCANNED += 1
-        
+    
+    end_time = time.time()
+    print("Time taken: ", (end_time - start_time), " secs")
     return True
 
 ''' write the data to the disk '''
@@ -180,6 +202,7 @@ def read_saved_data(filename):
 
     tfidf = ast.literal_eval(str_data)
     return tfidf
+
 
 tbl = read_file_tokenize()
 #temp_list = [compute_tf_idf(each) for each in tokens_in_all_doc['2012-10-22.txt'][0:25]]
