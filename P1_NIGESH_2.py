@@ -49,16 +49,9 @@ def querydocsim(qstring, filename):
     tf_qstring = get_query_tf(qstring)
 
     cosine_simil = 0
-    ''' 
-    for tmp_key in tf_qstring:
-        for tmp_key2 in doc:
-            if tmp_key == tmp_key2:
-                cosine_simil += tf_qstring[tmp_key] * doc[tmp_key2]
-    '''
 
     for key in list(set(tf_qstring).intersection(set(doc))):
         cosine_simil += tf_qstring[key] * doc[key]
-    #print(cosine_simil)
 
     return cosine_simil
 
@@ -75,12 +68,6 @@ def docdocsim(filename1, filename2):
     doc2 = tfidf[filename2]
     cosine_sum = 0
 
-    '''
-    for key in doc1:
-        for each in doc2:
-            if key == each:
-                cosine_sum += doc1[key] * doc2[each]
-    '''
     for key in list(set(doc1).intersection(set(doc2))):
         cosine_sum += doc1[key] * doc2[key]
 
@@ -103,8 +90,9 @@ def getidf(token):
 '''  return the total number of occurrences of a token in all documents #### '''
 def getcount(token):
     count = 0
+    stemmer = PorterStemmer()
     for each in tokens_in_all_doc:
-        count += tokens_in_all_doc[each].count(token)
+        count += tokens_in_all_doc[each].count(stemmer.stem(token))
     return count
 
 ''' return the document that has the highest similarity score with respect to 'qstring' #### '''
@@ -139,9 +127,6 @@ def get_tf_idf(doc):
             tfidf[doc][token] = ((1.0 + float(math.log10(float(count)))) if count != 0 else 0) * getidf(token)
             weighted_avg_mean += (tfidf[doc][token]**(2))
 
-    #for tmp_key in tfidf[doc]:
-    #    tfidf[doc][tmp_key] = ((tfidf[doc][tmp_key])) / weighted_avg_mean**(1/2)
-    
     tfidf[doc].update((x, y / weighted_avg_mean**(1/2)) for x,y in tfidf[doc].items())
 
     end_time = time.time()
@@ -205,5 +190,4 @@ def read_saved_data(filename):
 
 
 tbl = read_file_tokenize()
-#temp_list = [compute_tf_idf(each) for each in tokens_in_all_doc['2012-10-22.txt'][0:25]]
 
