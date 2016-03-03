@@ -22,6 +22,7 @@ tokens_in_all_doc = {}
 tfidf = {}
 TOTAL_DOCUMENTS_SCANNED = 0
 global_idf = {}
+global_tmp = {}
 
 ''' Return the normalized term frequency of the query '''
 def get_query_tf(qstring):
@@ -76,15 +77,13 @@ def docdocsim(filename1, filename2):
 ''' return the inverse document frequency of a token. If the token doesn't exist in the corpus, return 0 ### '''
 def getidf(token):
     global global_idf 
+    
     if token in global_idf:
         return global_idf[token]
+    else:
+        global_idf[token] = math.log10((float(TOTAL_DOCUMENTS_SCANNED) / float(global_tmp[token]))) 
+        return global_idf[token]
     
-    total_docs = 0
-    for key in tokens_in_all_doc:
-        if token in tokens_in_all_doc[key]:
-            total_docs += 1
-    global_idf[token] = math.log10((float(TOTAL_DOCUMENTS_SCANNED) / float(total_docs))) 
-
     return global_idf[token]
 
 '''  return the total number of occurrences of a token in all documents #### '''
@@ -140,8 +139,10 @@ def find_all_tf_idf():
 
     return tfidf
 
+
 ''' split the tokens, remove common words and stem the words '''
 def token_processor(doc):
+    global global_idf
     onlyApha = re.sub(r'[^a-zA-Z]+', " ", doc)
     tokens = onlyApha.split()
 
@@ -150,7 +151,18 @@ def token_processor(doc):
 
     stemmer = PorterStemmer()
     tokens = [stemmer.stem(each) for each in tokens]
-    
+
+    c = {}
+    for token in tokens:
+        if token not in global_tmp:
+            global_tmp[token] = 1
+            c[token] = 1
+        elif token in c:
+            continue
+        elif token not in c:
+            global_tmp[token] += 1
+            c[token] = 1
+                    
     return tokens
 
 ''' Read the all the files inside the Presidential Debates directory '''
