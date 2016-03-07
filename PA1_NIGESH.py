@@ -5,18 +5,20 @@ import math
 import re
 import nltk
 import time
-from functools import reduce
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem.porter import PorterStemmer
 
 '''
 ######################################################################
-    Name        Programming Assignment #1
     author      Nigesh Shakya
-    Project     CSE 5331
+    date        03/07/2016
+    platform    NLTK | python3
+    
 ######################################################################
 '''
+
+corpus_root = './presidential_debates' 
 
 tokens_in_all_doc = {}
 tfidf = {}
@@ -77,10 +79,15 @@ def docdocsim(filename1, filename2):
 ''' return the inverse document frequency of a token. If the token doesn't exist in the corpus, return 0 ### '''
 def getidf(token):
     global global_idf 
-    
+
     if token in global_idf:
         return global_idf[token]
     else:
+        if token not in global_tmp:
+            token = PorterStemmer().stem(token)
+            if token not in global_tmp:
+                return 0.0
+
         global_idf[token] = math.log10((float(TOTAL_DOCUMENTS_SCANNED) / float(global_tmp[token]))) 
         return global_idf[token]
     
@@ -111,7 +118,6 @@ def query(qstring):
 
 ''' find the tf-idf of single document '''
 def get_tf_idf(doc):
-    print("Running ", doc, "...")
     start_time = time.time() 
     if doc in tfidf:
         return tfidf[doc] 
@@ -129,13 +135,16 @@ def get_tf_idf(doc):
     tfidf[doc].update((x, y / weighted_avg_mean**(1/2)) for x,y in tfidf[doc].items())
 
     end_time = time.time()
-    print("time taken: ", (end_time - start_time), " secs")
+    # print("time taken: ", (end_time - start_time), " secs")
     return tfidf[doc]
 
 ''' find the tfidf vector of all the documents '''
 def find_all_tf_idf():
+    count = 0
     for doc in tokens_in_all_doc:
+        print("Processing ", doc, "... ## ", ((count * 100) / TOTAL_DOCUMENTS_SCANNED), "% ")
         get_tf_idf(doc)
+        count += 1
 
     return tfidf
 
@@ -152,25 +161,13 @@ def token_processor(doc):
     stemmer = PorterStemmer()
     tokens = [stemmer.stem(each) for each in tokens]
 
-    c = {}
-    for token in tokens:
-        if token not in global_tmp:
-            global_tmp[token] = 1
-            c[token] = 1
-        elif token in c:
-            continue
-        elif token not in c:
-            global_tmp[token] += 1
-            c[token] = 1
-                    
     return tokens
 
 ''' Read the all the files inside the Presidential Debates directory '''
 def read_file_tokenize():
-    corpus_root = './presidential_debates' 
+    global corpus_root  
     global TOTAL_DOCUMENTS_SCANNED
 
-    start_time = time.time()
     for filename in os.listdir(corpus_root):
         file = open(os.path.join(corpus_root, filename), "r")
         doc = file.read()
@@ -179,10 +176,21 @@ def read_file_tokenize():
 
         # now get the tokens
         tokens_in_all_doc[filename] = token_processor(doc)
+        
+        # To keep the index of tokens
+        counter = {}
+        for token in tokens_in_all_doc[filename]:
+            if token not in global_tmp:
+                global_tmp[token] = 1
+                counter[token] = 1
+            elif token in counter:
+                continue
+            elif token not in counter:
+                global_tmp[token] += 1
+                counter[token] = 1
+
         TOTAL_DOCUMENTS_SCANNED += 1
     
-    end_time = time.time()
-    print("Time taken: ", (end_time - start_time), " secs")
     return True
 
 ''' write the data to the disk '''
@@ -200,6 +208,10 @@ def read_saved_data(filename):
     tfidf = ast.literal_eval(str_data)
     return tfidf
 
-
+print("Please wait for a few seconds..\n")
+start_time = time.time()
 tbl = read_file_tokenize()
-
+find_all_tf_idf();
+end_time = time.time()
+print("Time taken: ", (end_time - start_time), " secs")
+print("\n Please input your queries\n")
